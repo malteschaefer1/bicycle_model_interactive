@@ -34,7 +34,7 @@ git push -u origin main
 
 ## 4. Recommended GitHub Settings
 
-- Enable branch protection on `main`
+- Optional: enable branch protection on `main` (for example, if you want PR gates)
 - Require CI checks before merge
 - Enable security alerts
 - Add repository topics and short description
