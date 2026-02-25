@@ -2,6 +2,14 @@
 
 Interactive, browser-based bicycle model (stationary single-track / Einspurmodell) for learning, exploration, and reproducible validation.
 
+## Model Screenshot
+
+![Screenshot of the interactive bicycle model](docs/model/images/model_screenshot.png)
+
+## Academic Context
+
+This model was created as part of the course "Entwicklung automobiler Systeme" at Bergische Universität Wuppertal (Wintersemester 2025/26) by Malte Schäfer, a class for Maschinenbau master's students.
+
 ## Quick Links
 
 - Get started: `GETTING_STARTED.md`
@@ -79,6 +87,10 @@ Dieses Repository bietet ein einfaches, nachvollziehbares stationäres Einspurmo
 - sicherheitsorientierten Statuswerten (`ok`, `warning`, `invalid`),
 - gemeinsamen Referenzfällen,
 - automatisierten Prüfungen für Modell und UI.
+
+### Akademischer Kontext
+
+Dieses Modell wurde im Rahmen der Lehrveranstaltung "Entwicklung automobiler Systeme" an der Bergischen Universität Wuppertal (Wintersemester 2025/26) von Malte Schäfer erstellt, einer Veranstaltung für Master-Studierende im Maschinenbau.
 
 ### Schnellstart
 
