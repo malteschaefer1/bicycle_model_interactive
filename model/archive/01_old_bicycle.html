@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktives Einspurmodell</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem; /* space between label and slider */
+        }
+        .param-label-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+        .param-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .param-input-group input[type="number"] {
+            width: 70px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid #d1d5db;
+            text-align: right;
+        }
+        /* Hides arrows from number input */
+        .param-input-group input[type="number"]::-webkit-outer-spin-button,
+        .param-input-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .param-input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .slider-input {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        .slider-input:hover {
+            opacity: 1;
+        }
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0ea5e9;
+            cursor: pointer;
+        }
+        .slider-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0ea5e9;
+            cursor: pointer;
+        }
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .output-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .output-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .output-unit {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .output-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #334155;
+            margin-top: 0.25rem;
+        }
+        .color-v { color: #0ea5e9; }
+        .color-beta { color: #dc2626; }
+        .color-Fyf { color: #16a34a; }
+        .color-Fyr { color: #f59e0b; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Interaktives Einspurmodell</h1>
+            <p class="text-slate-600 mt-2">nach Riekert und Schunck (1940)</p>
+            <p class="text-slate-600 mt-2">WORK IN PROGRESS (nicht validiert)</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Column 1: Input Parameters -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-slate-200 flex flex-col gap-6">
+                <div>
+                    <h2 class="text-xl font-bold mb-4 border-b pb-3 text-slate-900">Eingabeparameter</h2>
+                    
+                    <!-- Vehicle Parameters -->
+                    <h3 class="text-lg font-semibold text-sky-700 mb-4">Fahrzeugparameter</h3>
+                    <div id="vehicle-params" class="space-y-4">
+                        <!-- Mass -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="mass-slider" class="font-medium">Masse (m)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="mass-input" min="500" max="3000" step="50" value="1500">
+                                    <span>kg</span>
+                                </div>
+                            </div>
+                            <input type="range" id="mass-slider" class="slider-input" min="500" max="3000" step="50" value="1500">
+                        </div>
+                        <!-- Yaw Moment of Inertia -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="Iz-slider" class="font-medium">Gierträgheitsmoment (I<sub>z</sub>)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="Iz-input" min="1000" max="6000" step="100" value="3000">
+                                    <span>kg·m²</span>
+                                </div>
+                            </div>
+                            <input type="range" id="Iz-slider" class="slider-input" min="1000" max="6000" step="100" value="3000">
+                        </div>
+                        <!-- l_f -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="lf-slider" class="font-medium">Abstand SP-VA (l<sub>f</sub>)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="lf-input" min="0.5" max="2.5" step="0.1" value="1.2">
+                                    <span>m</span>
+                                </div>
+                            </div>
+                            <input type="range" id="lf-slider" class="slider-input" min="0.5" max="2.5" step="0.1" value="1.2">
+                        </div>
+                        <!-- l_r -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="lr-slider" class="font-medium">Abstand SP-HA (l<sub>r</sub>)</label>
+                                 <div class="param-input-group">
+                                    <input type="number" id="lr-input" min="0.5" max="2.5" step="0.1" value="1.6">
+                                    <span>m</span>
+                                </div>
+                            </div>
+                            <input type="range" id="lr-slider" class="slider-input" min="0.5" max="2.5" step="0.1" value="1.6">
+                        </div>
+                        <!-- Cornering Stiffness Front -->
+                        <div class="param-group">
+                             <div class="param-label-group">
+                                <label for="cf-slider" class="font-medium color-Fyf">Schräglaufsteifigkeit v (c<sub>f</sub>)</label>
+                                 <div class="param-input-group">
+                                    <input type="number" id="cf-input" min="20000" max="150000" step="1000" value="80000">
+                                    <span>N/rad</span>
+                                </div>
+                            </div>
+                            <input type="range" id="cf-slider" class="slider-input" min="20000" max="150000" step="1000" value="80000">
+                        </div>
+                        <!-- Cornering Stiffness Rear -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="cr-slider" class="font-medium color-Fyr">Schräglaufsteifigkeit h (c<sub>r</sub>)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="cr-input" min="20000" max="150000" step="1000" value="80000">
+                                    <span>N/rad</span>
+                                </div>
+                            </div>
+                            <input type="range" id="cr-slider" class="slider-input" min="20000" max="150000" step="1000" value="80000">
+                        </div>
+                    </div>
+
+                    <!-- Driving State -->
+                    <h3 class="text-lg font-semibold text-sky-700 mt-6 mb-4">Fahrzustand</h3>
+                    <div id="driving-params" class="space-y-4">
+                        <!-- Velocity -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="v-slider" class="font-medium color-v">Geschwindigkeit (v)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="v-input" min="1" max="50" step="1" value="20">
+                                    <span>m/s</span>
+                                </div>
+                            </div>
+                            <input type="range" id="v-slider" class="slider-input" min="1" max="50" step="1" value="20">
+                        </div>
+                        <!-- Steering Angle -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="delta-slider" class="font-medium">Lenkwinkel (δ)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="delta-input" min="-10" max="10" step="0.1" value="2.0">
+                                    <span>°</span>
+                                </div>
+                            </div>
+                            <input type="range" id="delta-slider" class="slider-input" min="-10" max="10" step="0.1" value="2.0">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Disclaimer -->
+                <div class="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-lg">
+                    <h3 class="font-semibold text-slate-800">Annahmen & Gültigkeitsbereich</h3>
+                    <ul class="list-disc list-inside text-sm text-slate-600 mt-2 space-y-1">
+                        <li>Stationärer Zustand (konstante Geschwindigkeit & Lenkwinkel)</li>
+                        <li>Lineares Reifenmodell (kleine Schräglaufwinkel)</li>
+                        <li>Kleine Winkel für Schwimm- und Lenkwinkel</li>
+                        <li>Anwendbar für trockenen Asphalt bei geringen Querbeschleunigungen (ca. < 4 m/s²).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Column 2: Visualization and Outputs -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Visualization -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                    <h2 class="text-xl font-bold mb-4 text-slate-900">Visualisierung</h2>
+                    <div class="bg-slate-100 rounded-lg overflow-hidden border border-slate-200 aspect-[2/1]">
+                        <canvas id="vehicle-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Outputs -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                    <h2 class="text-xl font-bold mb-4 text-slate-900">Stationäre Ausgabegrößen</h2>
+                    <div id="output-values" class="output-grid">
+                        <!-- Cards will be inserted here by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-xs text-slate-500">
+            <p>
+                Originale Veröffentlichung: Riekert, P., Schunck, T.E. (1940). Über die Fahreigenschaften von Kraftfahrzeugen. 
+                <a href="https://doi.org/10.1007/BF02086921" target="_blank" class="text-sky-600 hover:underline">Link</a>.
+            </p>
+            <p class="mt-2">
+                Dieses Werkzeug wird unter der MIT-Lizenz veröffentlicht. Soweit gesetzlich zulässig, hat der Autor alle Urheberrechte und verwandten Schutzrechte an diesem Werk im Rahmen der <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" class="text-sky-600 hover:underline">CC0 1.0 Universal Public Domain Dedication</a> aufgegeben. Hinweise zur Verbesserung und zu möglichen Fehlern an Malte Schäfer, mschaefer@uni-wuppertal.de
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const paramsConfig = {
+            m: { slider: 'mass-slider', input: 'mass-input' },
+            Iz: { slider: 'Iz-slider', input: 'Iz-input' },
+            lf: { slider: 'lf-slider', input: 'lf-input' },
+            lr: { slider: 'lr-slider', input: 'lr-input' },
+            cf: { slider: 'cf-slider', input: 'cf-input' },
+            cr: { slider: 'cr-slider', input: 'cr-input' },
+            v: { slider: 'v-slider', input: 'v-input' },
+            delta: { slider: 'delta-slider', input: 'delta-input' },
+        };
+        const inputs = {};
+        for(const key in paramsConfig){
+            inputs[key] = {
+                slider: document.getElementById(paramsConfig[key].slider),
+                input: document.getElementById(paramsConfig[key].input),
+            };
+        }
+
+        const canvas = document.getElementById('vehicle-canvas');
+        const ctx = canvas.getContext('2d');
+        const outputContainer = document.getElementById('output-values');
+        let currentParams = {};
+        let currentOutputs = {};
+
+        // --- Color Configuration ---
+        const colorMap = {
+            v: '#0ea5e9',
+            beta: '#dc2626',
+            F_yf: '#16a34a',
+            F_yr: '#f59e0b',
+        };
+
+        // --- Utility Functions ---
+        const radToDeg = rad => rad * 180 / Math.PI;
+        const degToRad = deg => deg * Math.PI / 180;
+
+        // --- Core Calculation Logic ---
+        function calculateVehicleDynamics(params) {
+            const { m, Iz, lf, lr, cf, cr, v, delta } = params;
+            
+            // Check for critical speed and stability
+            const criticalSpeedSquared = (cf * cr * (lf + lr)**2) / (m * (lf * cf - lr * cr));
+            const criticalSpeed = Math.sqrt(criticalSpeedSquared);
+
+            // Handle the case where the denominator becomes zero or negative, which means the model is not applicable.
+            if (v >= criticalSpeed || v < 0.1) {
+                return { beta: 0, psi_dot: 0, ay: 0, alpha_f: 0, alpha_r: 0, F_yf: 0, F_yr: 0, error: true };
+            }
+
+            const l = lf + lr;
+            const delta_rad = degToRad(delta);
+
+            const determinant = ((cf * cr * l * l) / v) - (m * v * (lf * cf - lr * cr));
+            
+            if (Math.abs(determinant) < 1e-6) {
+                return { beta: 0, psi_dot: 0, ay: 0, alpha_f: 0, alpha_r: 0, F_yf: 0, F_yr: 0, error: true };
+            }
+
+            const psi_dot_num = cf * cr * l * delta_rad;
+            const psi_dot = psi_dot_num / determinant;
+
+            const beta_num = cf * delta_rad * (((lr * cr * l) / v) - (m * v * lf));
+            const beta = beta_num / determinant;
+            
+            const alpha_f = delta_rad - beta - (lf * psi_dot) / v;
+            const alpha_r = -beta + (lr * psi_dot) / v;
+            const F_yf = cf * alpha_f;
+            const F_yr = cr * alpha_r;
+            const ay = v * psi_dot;
+
+            return { beta, psi_dot, ay, alpha_f, alpha_r, F_yf, F_yr, criticalSpeed };
+        }
+
+        // --- Drawing Logic ---
+        function drawVehicle(params, outputs) {
+            const { lf, lr, delta } = params;
+            const { beta, F_yf, F_yr } = outputs;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            ctx.save();
+            ctx.font = '14px Inter';
+
+            const wheelbase = lf + lr;
+            const scale = h * 0.6 / wheelbase; 
+            const cx = w / 2;
+            const cy = h / 2;
+
+            function drawArrow(fromX, fromY, toX, toY, color = 'black', lw = 2) {
+                const headlen = 10;
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const angle = Math.atan2(dy, dx);
+                ctx.beginPath();
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(toX, toY);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lw;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(toX, toY);
+                ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+                ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+                ctx.closePath();
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+            
+            // Center of Gravity
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = colorMap.beta;
+            ctx.fill();
+            ctx.fillText('Schwerpunkt', cx + 10, cy + 5);
+
+            // Chassis
+            const frontAxleY = cy - lf * scale;
+            const rearAxleY = cy + lr * scale;
+            ctx.beginPath();
+            ctx.moveTo(cx, frontAxleY);
+            ctx.lineTo(cx, rearAxleY);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#334155';
+            ctx.stroke();
+
+            // Wheels
+            const wheelWidth = 30;
+            const wheelLength = 10;
+            ctx.fillStyle = '#1e293b';
+            // Rear wheel
+            ctx.fillRect(cx - wheelLength/2, rearAxleY - wheelWidth/2, wheelLength, wheelWidth);
+            // Front wheel (steered)
+            ctx.save();
+            ctx.translate(cx, frontAxleY);
+            ctx.rotate(degToRad(delta));
+            ctx.fillRect(-wheelLength / 2, -wheelWidth / 2, wheelLength, wheelWidth);
+            ctx.restore();
+            
+            // --- Draw Vectors and Angles ---
+            const forceScale = 0.01; 
+            const velocityScale = 4;
+
+            // Velocity Vector (with beta)
+            const v_endX = cx + params.v * velocityScale * Math.sin(beta);
+            const v_endY = cy - params.v * velocityScale * Math.cos(beta);
+            drawArrow(cx, cy, v_endX, v_endY, colorMap.v, 3);
+            ctx.fillStyle = colorMap.v;
+            ctx.fillText('v', v_endX + 5, v_endY - 5);
+
+            // Front Lateral Force Vector
+            drawArrow(cx, frontAxleY, cx + F_yf * forceScale, frontAxleY, colorMap.F_yf, 2);
+            ctx.fillStyle = colorMap.F_yf;
+            ctx.fillText('F_y,v', cx + F_yf * forceScale + 5, frontAxleY);
+
+            // Rear Lateral Force Vector
+            drawArrow(cx, rearAxleY, cx + F_yr * forceScale, rearAxleY, colorMap.F_yr, 2);
+            ctx.fillStyle = colorMap.F_yr;
+            ctx.fillText('F_y,h', cx + F_yr * forceScale + 5, rearAxleY);
+            
+            // Side Slip Angle Arc (beta)
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(220, 38, 38, 0.7)';
+            ctx.lineWidth = 1;
+            ctx.moveTo(cx, cy - 60);
+            ctx.arc(cx, cy, 60, -Math.PI/2, -Math.PI/2 + beta, beta < 0);
+            ctx.stroke();
+            ctx.fillStyle = colorMap.beta;
+            ctx.fillText(`β`, cx + 65 * Math.sin(beta/2), cy - 65 * Math.cos(beta/2));
+            
+            ctx.restore();
+        }
+
+        // --- UI Update Logic ---
+        function updateUI(outputs) {
+            const outputData = [
+                { key: 'beta', label: 'Schwimmwinkel (β)', value: radToDeg(outputs.beta), unit: '°' },
+                { key: 'psi_dot', label: 'Giergeschwindigkeit (ψ̇)', value: radToDeg(outputs.psi_dot), unit: '°/s' },
+                { key: 'ay', label: 'Querbeschleunigung (a_y)', value: outputs.ay, unit: 'm/s²' },
+                { key: 'alpha_f', label: 'Schräglaufwinkel v (α_f)', value: radToDeg(outputs.alpha_f), unit: '°' },
+                { key: 'alpha_r', label: 'Schräglaufwinkel h (α_r)', value: radToDeg(outputs.alpha_r), unit: '°' },
+                { key: 'F_yf', label: 'Seitenkraft v (F_y,v)', value: outputs.F_yf, unit: 'N' },
+                { key: 'F_yr', label: 'Seitenkraft h (F_y,h)', value: outputs.F_yr, unit: 'N' },
+            ];
+            
+            outputContainer.innerHTML = '';
+            outputData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'output-card';
+                let colorClass = '';
+                if(item.key === 'beta') colorClass = 'color-beta';
+                if(item.key === 'F_yf') colorClass = 'color-Fyf';
+                if(item.key === 'F_yr') colorClass = 'color-Fyr';
+
+                card.innerHTML = `
+                    <div class="output-value ${colorClass}">${item.value.toFixed(2)}</div>
+                    <div class="output-unit">${item.unit}</div>
+                    <div class="output-label">${item.label}</div>
+                `;
+                outputContainer.appendChild(card);
+            });
+            if (outputs.error) {
+                 const errorCard = document.createElement('div');
+                 errorCard.className = 'output-card col-span-full bg-red-50 border-red-200';
+                 errorCard.innerHTML = `<div class="output-label text-red-700 font-semibold">
+                    <p>Warnung: Die eingegebenen Werte liegen außerhalb des Gültigkeitsbereichs des Modells.</p>
+                    <p>Mögliche Gründe:</p>
+                    <ul class="list-disc list-inside mt-2 text-left">
+                        <li>Die Geschwindigkeit ist höher als die kritische Geschwindigkeit, bei der das Fahrzeug instabil wird.</li>
+                        <li>Das Einspurmodell ist nur für geringe Querbeschleunigungen und kleine Lenkwinkel anwendbar.</li>
+                    </ul>
+                 </div>`
+                 outputContainer.appendChild(errorCard);
+            }
+        }
+
+        // --- Main Application Logic ---
+        function main() {
+            for (const key in inputs) {
+                currentParams[key] = parseFloat(inputs[key].slider.value);
+            }
+            currentOutputs = calculateVehicleDynamics(currentParams);
+            updateUI(currentOutputs);
+            drawVehicle(currentParams, currentOutputs);
+        }
+
+        // --- Event Listeners and Input Sync ---
+        function syncInputs(source, key) {
+             const { slider, input } = inputs[key];
+             const target = source.type === 'range' ? input : slider;
+             target.value = source.value;
+             main();
+        }
+
+        for (const key in inputs) {
+            const { slider, input } = inputs[key];
+            slider.addEventListener('input', (e) => syncInputs(e.target, key));
+            input.addEventListener('change', (e) => {
+                // Clamp value to min/max of slider
+                const min = parseFloat(slider.min);
+                const max = parseFloat(slider.max);
+                if(e.target.value < min) e.target.value = min;
+                if(e.target.value > max) e.target.value = max;
+                syncInputs(e.target, key);
+            });
+        }
+        
+        function setupCanvas() {
+            const container = canvas.parentElement;
+            const size = container.getBoundingClientRect();
+            canvas.width = size.width;
+            canvas.height = size.height;
+            main();
+        }
+
+        window.addEventListener('load', setupCanvas);
+        window.addEventListener('resize', setupCanvas);
+    </script>
+</body>
+</html>

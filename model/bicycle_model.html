@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktives Einspurmodell</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem; /* space between label and slider */
+        }
+        .param-label-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+        .param-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .param-input-group input[type="number"] {
+            width: 70px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            border: 1px solid #d1d5db;
+            text-align: right;
+        }
+        /* Hides arrows from number input */
+        .param-input-group input[type="number"]::-webkit-outer-spin-button,
+        .param-input-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .param-input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .slider-input {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        .slider-input:hover {
+            opacity: 1;
+        }
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0ea5e9;
+            cursor: pointer;
+        }
+        .slider-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0ea5e9;
+            cursor: pointer;
+        }
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .output-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .output-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .output-unit {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .output-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #334155;
+            margin-top: 0.25rem;
+        }
+        .color-v { color: #0ea5e9; }
+        .color-beta { color: #dc2626; }
+        .color-Fyf { color: #16a34a; }
+        .color-Fyr { color: #f59e0b; }
+        .ref-table-wrap {
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+        }
+        .ref-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+            font-size: 0.85rem;
+        }
+        .ref-table th,
+        .ref-table td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.6rem 0.5rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        .ref-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .ref-table tr:last-child td {
+            border-bottom: none;
+        }
+        .ref-badge {
+            display: inline-block;
+            padding: 0.15rem 0.45rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            white-space: nowrap;
+        }
+        .ref-pass {
+            background: #ecfdf5;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+        .ref-fail {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+        .ref-pending {
+            background: #f1f5f9;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+        .ref-active-row {
+            background: #f0f9ff;
+        }
+        .ref-action-button {
+            border: 1px solid #94a3b8;
+            background: #ffffff;
+            color: #0f172a;
+            border-radius: 0.4rem;
+            padding: 0.25rem 0.55rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .ref-action-button:hover {
+            background: #f8fafc;
+        }
+        #vehicle-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900">Interaktives Einspurmodell</h1>
+            <p class="text-slate-600 mt-2">nach Riekert und Schunck (1940)</p>
+            <p class="text-slate-600 mt-2">WORK IN PROGRESS (nicht validiert)</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Column 1: Input Parameters -->
+            <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-lg border border-slate-200 flex flex-col gap-6">
+                <div>
+                    <h2 class="text-xl font-bold mb-4 border-b pb-3 text-slate-900">Eingabeparameter</h2>
+                    
+                    <!-- Vehicle Parameters -->
+                    <h3 class="text-lg font-semibold text-sky-700 mb-4">Fahrzeugparameter</h3>
+                    <div id="vehicle-params" class="space-y-4">
+                        <!-- Mass -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="mass-slider" class="font-medium">Masse (m)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="mass-input" min="500" max="3000" step="50" value="1500">
+                                    <span>kg</span>
+                                </div>
+                            </div>
+                            <input type="range" id="mass-slider" class="slider-input" min="500" max="3000" step="50" value="1500">
+                        </div>
+                        <!-- Yaw Moment of Inertia -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="Iz-slider" class="font-medium">Gierträgheitsmoment (I<sub>z</sub>)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="Iz-input" min="1000" max="6000" step="100" value="3000" disabled aria-disabled="true">
+                                    <span>kg·m²</span>
+                                </div>
+                            </div>
+                            <input type="range" id="Iz-slider" class="slider-input" min="1000" max="6000" step="100" value="3000" disabled aria-disabled="true">
+                        </div>
+                        <p class="text-xs text-slate-500 -mt-2">Hinweis: I<sub>z</sub> wirkt nur im instationären Modell und ist hier deaktiviert.</p>
+                        <!-- l_f -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="lf-slider" class="font-medium">Abstand SP-VA (l<sub>f</sub>)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="lf-input" min="0.5" max="2.5" step="0.1" value="1.2">
+                                    <span>m</span>
+                                </div>
+                            </div>
+                            <input type="range" id="lf-slider" class="slider-input" min="0.5" max="2.5" step="0.1" value="1.2">
+                        </div>
+                        <!-- l_r -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="lr-slider" class="font-medium">Abstand SP-HA (l<sub>r</sub>)</label>
+                                 <div class="param-input-group">
+                                    <input type="number" id="lr-input" min="0.5" max="2.5" step="0.1" value="1.6">
+                                    <span>m</span>
+                                </div>
+                            </div>
+                            <input type="range" id="lr-slider" class="slider-input" min="0.5" max="2.5" step="0.1" value="1.6">
+                        </div>
+                        <!-- Cornering Stiffness Front -->
+                        <div class="param-group">
+                             <div class="param-label-group">
+                                <label for="cf-slider" class="font-medium color-Fyf">Schräglaufsteifigkeit v (c<sub>f</sub>)</label>
+                                 <div class="param-input-group">
+                                    <input type="number" id="cf-input" min="20000" max="150000" step="1000" value="80000">
+                                    <span>N/rad</span>
+                                </div>
+                            </div>
+                            <input type="range" id="cf-slider" class="slider-input" min="20000" max="150000" step="1000" value="80000">
+                        </div>
+                        <!-- Cornering Stiffness Rear -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="cr-slider" class="font-medium color-Fyr">Schräglaufsteifigkeit h (c<sub>r</sub>)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="cr-input" min="20000" max="150000" step="1000" value="80000">
+                                    <span>N/rad</span>
+                                </div>
+                            </div>
+                            <input type="range" id="cr-slider" class="slider-input" min="20000" max="150000" step="1000" value="80000">
+                        </div>
+                    </div>
+
+                    <!-- Driving State -->
+                    <h3 class="text-lg font-semibold text-sky-700 mt-6 mb-4">Fahrzustand</h3>
+                    <div id="driving-params" class="space-y-4">
+                        <!-- Velocity -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="v-slider" class="font-medium color-v">Geschwindigkeit (v)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="v-input" min="1" max="50" step="1" value="20">
+                                    <span>m/s</span>
+                                </div>
+                            </div>
+                            <input type="range" id="v-slider" class="slider-input" min="1" max="50" step="1" value="20">
+                        </div>
+                        <!-- Steering Angle -->
+                        <div class="param-group">
+                            <div class="param-label-group">
+                                <label for="delta-slider" class="font-medium">Lenkwinkel (δ)</label>
+                                <div class="param-input-group">
+                                    <input type="number" id="delta-input" min="-10" max="10" step="0.1" value="2.0">
+                                    <span>°</span>
+                                </div>
+                            </div>
+                            <input type="range" id="delta-slider" class="slider-input" min="-10" max="10" step="0.1" value="2.0">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Disclaimer -->
+                <div class="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-lg">
+                    <h3 class="font-semibold text-slate-800">Annahmen & Gültigkeitsbereich</h3>
+                    <ul class="list-disc list-inside text-sm text-slate-600 mt-2 space-y-1">
+                        <li>Stationärer Zustand (konstante Geschwindigkeit & Lenkwinkel)</li>
+                        <li>Lineares Reifenmodell (kleine Schräglaufwinkel)</li>
+                        <li>Kleine Winkel für Schwimm- und Lenkwinkel</li>
+                        <li>Anwendbar für trockenen Asphalt bei geringen Querbeschleunigungen (ca. < 4 m/s²).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Column 2: Visualization and Outputs -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Visualization -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                    <h2 class="text-xl font-bold mb-4 text-slate-900">Visualisierung</h2>
+                    <div class="bg-slate-100 rounded-lg overflow-hidden border border-slate-200 aspect-[2/1]">
+                        <canvas id="vehicle-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Outputs -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                    <h2 class="text-xl font-bold mb-4 text-slate-900">Stationäre Ausgabegrößen</h2>
+                    <div id="model-status" class="hidden mb-4 p-4 rounded-lg border text-sm"></div>
+                    <div id="output-values" class="output-grid">
+                        <!-- Cards will be inserted here by JS -->
+                    </div>
+                </div>
+
+                <!-- Reference Cases -->
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                    <h2 class="text-xl font-bold mb-2 text-slate-900">Referenzfälle & Selbsttest</h2>
+                    <p class="text-sm text-slate-600 mb-4">
+                        Für jeden Fall sind Sollwerte hinterlegt. Mit <strong>Laden</strong> setzen Sie die Parameter.
+                        Die Spalte <strong>Selbsttest</strong> zeigt, ob das aktuelle Modell die Sollwerte innerhalb der Toleranz trifft.
+                    </p>
+                    <div id="reference-validation-summary" class="mb-4 text-sm"></div>
+                    <div class="ref-table-wrap">
+                        <table class="ref-table">
+                            <thead>
+                                <tr>
+                                    <th>Fall</th>
+                                    <th>Parameter</th>
+                                    <th>Sollwerte</th>
+                                    <th>Status</th>
+                                    <th>Selbsttest</th>
+                                    <th>Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reference-case-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-xs text-slate-500">
+            <p>
+                Originale Veröffentlichung: Riekert, P., Schunck, T.E. (1940). Über die Fahreigenschaften von Kraftfahrzeugen. 
+                <a href="https://doi.org/10.1007/BF02086921" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:underline">Link</a>.
+            </p>
+            <p class="mt-2">
+                Dieses Werkzeug wird unter der MIT-Lizenz veröffentlicht. Soweit gesetzlich zulässig, hat der Autor alle Urheberrechte und verwandten Schutzrechte an diesem Werk im Rahmen der <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer" class="text-sky-600 hover:underline">CC0 1.0 Universal Public Domain Dedication</a> aufgegeben. Hinweise zur Verbesserung und zu möglichen Fehlern an Malte Schäfer, mschaefer@uni-wuppertal.de
+            </p>
+        </footer>
+    </div>
+
+    <script src="./bicycle_dynamics.js"></script>
+    <script src="./reference_cases.js"></script>
+    <script>
+        const dynamics = window.BicycleDynamics;
+        if (!dynamics) {
+            throw new Error('BicycleDynamics module not loaded.');
+        }
+        const referenceCasesLib = window.BicycleReferenceCases;
+        if (!referenceCasesLib) {
+            throw new Error('BicycleReferenceCases module not loaded.');
+        }
+
+        const { calculateVehicleDynamics, sanitizeParamValue, radToDeg, degToRad, isFiniteNumber } = dynamics;
+        const { REFERENCE_CASES, evaluateReferenceCase } = referenceCasesLib;
+
+        // --- DOM Elements ---
+        const paramsConfig = {
+            m: { slider: 'mass-slider', input: 'mass-input' },
+            lf: { slider: 'lf-slider', input: 'lf-input' },
+            lr: { slider: 'lr-slider', input: 'lr-input' },
+            cf: { slider: 'cf-slider', input: 'cf-input' },
+            cr: { slider: 'cr-slider', input: 'cr-input' },
+            v: { slider: 'v-slider', input: 'v-input' },
+            delta: { slider: 'delta-slider', input: 'delta-input' },
+        };
+        const inputs = {};
+        for (const key in paramsConfig) {
+            inputs[key] = {
+                slider: document.getElementById(paramsConfig[key].slider),
+                input: document.getElementById(paramsConfig[key].input),
+            };
+        }
+
+        const canvas = document.getElementById('vehicle-canvas');
+        const ctx = canvas.getContext('2d');
+        const outputContainer = document.getElementById('output-values');
+        const statusContainer = document.getElementById('model-status');
+        const referenceSummaryContainer = document.getElementById('reference-validation-summary');
+        const referenceTableBody = document.getElementById('reference-case-table-body');
+        let currentParams = {};
+        let currentOutputs = {};
+        let activeReferenceCaseId = null;
+
+        // --- Color Configuration ---
+        const colorMap = {
+            v: '#0ea5e9',
+            beta: '#dc2626',
+            cog: '#964B00',
+            F_yf: '#16a34a',
+            F_yr: '#f59e0b',
+        };
+
+        const reasonMessages = {
+            speed_too_low: 'Geschwindigkeit ist zu klein für eine stabile Berechnung.',
+            critical_speed_not_finite: 'Kritische Geschwindigkeit konnte nicht stabil berechnet werden.',
+            critical_speed_exceeded: 'Geschwindigkeit liegt auf oder über der kritischen Geschwindigkeit.',
+            near_critical_speed: 'Geschwindigkeit liegt zu nahe an der kritischen Geschwindigkeit (numerisch instabil).',
+            approaching_critical_speed: 'Geschwindigkeit liegt nahe an der kritischen Geschwindigkeit.',
+            determinant_too_small: 'Das Gleichungssystem ist numerisch nahezu singulär.',
+            non_finite_output: 'Die Berechnung hat nicht-finite Werte produziert.',
+            outside_ay_limit: 'Querbeschleunigung liegt außerhalb des empfohlenen Modellbereichs (ca. < 4 m/s²).',
+            ay_hard_limit_exceeded: 'Querbeschleunigung ist weit außerhalb des sicheren Modellbereichs.',
+            outside_small_angle_limit: 'Winkel liegen außerhalb der Kleinwinkel-Annahme.',
+            angle_hard_limit_exceeded: 'Winkel sind zu groß für das lineare Reifenmodell.',
+        };
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function formatValue(value, digits) {
+            if (!isFiniteNumber(value)) {
+                return '∞';
+            }
+            return value.toFixed(digits);
+        }
+
+        function createOutputCard(item) {
+            const card = document.createElement('div');
+            card.className = 'output-card';
+
+            const valueEl = document.createElement('div');
+            valueEl.className = `output-value ${item.colorClass || ''}`.trim();
+            valueEl.textContent = item.textValue;
+
+            const unitEl = document.createElement('div');
+            unitEl.className = 'output-unit';
+            unitEl.textContent = item.unit;
+
+            const labelEl = document.createElement('div');
+            labelEl.className = 'output-label';
+            labelEl.textContent = item.label;
+
+            card.appendChild(valueEl);
+            card.appendChild(unitEl);
+            card.appendChild(labelEl);
+            return card;
+        }
+
+        function renderStatus(outputs) {
+            const reasons = [...outputs.errors, ...outputs.warnings];
+            if (outputs.status === 'ok' || reasons.length === 0) {
+                statusContainer.classList.add('hidden');
+                statusContainer.textContent = '';
+                return;
+            }
+
+            const isInvalid = outputs.status === 'invalid';
+            statusContainer.className = isInvalid
+                ? 'mb-4 p-4 rounded-lg border text-sm bg-red-50 border-red-200 text-red-800'
+                : 'mb-4 p-4 rounded-lg border text-sm bg-amber-50 border-amber-200 text-amber-900';
+
+            statusContainer.textContent = '';
+
+            const title = document.createElement('p');
+            title.className = 'font-semibold';
+            title.textContent = isInvalid
+                ? 'Ungültige Parameterkombination'
+                : 'Hinweis zum Gültigkeitsbereich';
+            statusContainer.appendChild(title);
+
+            const list = document.createElement('ul');
+            list.className = 'list-disc list-inside mt-2 space-y-1';
+            reasons.forEach((reasonCode) => {
+                const item = document.createElement('li');
+                item.textContent = reasonMessages[reasonCode] || reasonCode;
+                list.appendChild(item);
+            });
+            statusContainer.appendChild(list);
+
+            if (isFiniteNumber(outputs.criticalSpeed)) {
+                const criticalInfo = document.createElement('p');
+                criticalInfo.className = 'mt-2 text-xs';
+                criticalInfo.textContent = `v_krit = ${formatValue(outputs.criticalSpeed, 2)} m/s (${formatValue(outputs.criticalSpeed * 3.6, 1)} km/h)`;
+                statusContainer.appendChild(criticalInfo);
+            }
+        }
+
+        function formatReferenceParams(params) {
+            return `m=${params.m} kg, l_f=${params.lf} m, l_r=${params.lr} m, c_f=${params.cf} N/rad, c_r=${params.cr} N/rad, v=${params.v} m/s, δ=${params.delta}°`;
+        }
+
+        function formatReferenceExpected(expected) {
+            return `β=${expected.betaDeg.toFixed(3)}°, ψ̇=${expected.psiDotDeg.toFixed(3)}°/s, a_y=${expected.ay.toFixed(3)} m/s²`;
+        }
+
+        function createBadge(label, cssClass) {
+            const badge = document.createElement('span');
+            badge.className = `ref-badge ${cssClass}`;
+            badge.textContent = label;
+            return badge;
+        }
+
+        function applyReferenceCase(referenceCase) {
+            activeReferenceCaseId = referenceCase.id;
+            for (const key in inputs) {
+                if (!(key in referenceCase.params)) {
+                    continue;
+                }
+                const normalized = sanitizeParamValue(key, referenceCase.params[key], parseFloat(inputs[key].slider.value));
+                inputs[key].slider.value = normalized;
+                inputs[key].input.value = normalized;
+            }
+            main();
+        }
+
+        function renderReferenceCaseTable() {
+            const evaluations = REFERENCE_CASES.map((referenceCase) => {
+                return {
+                    caseDef: referenceCase,
+                    result: evaluateReferenceCase(dynamics, referenceCase),
+                };
+            });
+
+            const passCount = evaluations.filter((entry) => entry.result.pass).length;
+            const allPassed = passCount === evaluations.length;
+            referenceSummaryContainer.textContent = '';
+            referenceSummaryContainer.appendChild(
+                createBadge(
+                    allPassed
+                        ? `Selbsttest: ${passCount}/${evaluations.length} Referenzfälle OK`
+                        : `Selbsttest: ${passCount}/${evaluations.length} Referenzfälle OK (mit Abweichungen)`,
+                    allPassed ? 'ref-pass' : 'ref-fail'
+                )
+            );
+
+            referenceTableBody.textContent = '';
+            evaluations.forEach((entry) => {
+                const { caseDef, result } = entry;
+                const row = document.createElement('tr');
+                if (activeReferenceCaseId === caseDef.id) {
+                    row.classList.add('ref-active-row');
+                }
+
+                const caseCell = document.createElement('td');
+                const caseTitle = document.createElement('div');
+                caseTitle.className = 'font-semibold text-slate-800';
+                caseTitle.textContent = caseDef.label;
+                const caseNote = document.createElement('div');
+                caseNote.className = 'text-xs text-slate-500 mt-1';
+                caseNote.textContent = caseDef.note;
+                caseCell.appendChild(caseTitle);
+                caseCell.appendChild(caseNote);
+                row.appendChild(caseCell);
+
+                const paramCell = document.createElement('td');
+                paramCell.className = 'text-slate-700';
+                paramCell.textContent = formatReferenceParams(caseDef.params);
+                row.appendChild(paramCell);
+
+                const expectedCell = document.createElement('td');
+                expectedCell.className = 'text-slate-700';
+                expectedCell.textContent = formatReferenceExpected(caseDef.expected);
+                row.appendChild(expectedCell);
+
+                const statusCell = document.createElement('td');
+                statusCell.appendChild(
+                    createBadge(
+                        caseDef.expected.status,
+                        caseDef.expected.status === 'ok' ? 'ref-pass' : 'ref-pending'
+                    )
+                );
+                row.appendChild(statusCell);
+
+                const testCell = document.createElement('td');
+                const testBadge = createBadge(result.pass ? 'OK' : 'Abweichung', result.pass ? 'ref-pass' : 'ref-fail');
+                testCell.appendChild(testBadge);
+                const detail = document.createElement('div');
+                detail.className = 'text-xs text-slate-500 mt-1';
+                detail.textContent = `Δβ=${result.delta.betaDeg.toFixed(3)}°, Δψ̇=${result.delta.psiDotDeg.toFixed(3)}°/s, Δa_y=${result.delta.ay.toFixed(3)}`;
+                testCell.appendChild(detail);
+                row.appendChild(testCell);
+
+                const actionCell = document.createElement('td');
+                const loadButton = document.createElement('button');
+                loadButton.type = 'button';
+                loadButton.className = 'ref-action-button';
+                loadButton.textContent = 'Laden';
+                loadButton.addEventListener('click', () => applyReferenceCase(caseDef));
+                actionCell.appendChild(loadButton);
+                row.appendChild(actionCell);
+
+                referenceTableBody.appendChild(row);
+            });
+        }
+
+        // --- Drawing Logic ---
+        function drawVehicle(params, outputs) {
+            const { lf, lr, delta, v } = params;
+            const { beta, F_yf, F_yr } = outputs;
+
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            if (w < 2 || h < 2) {
+                return;
+            }
+            ctx.clearRect(0, 0, w, h);
+            ctx.save();
+            ctx.font = '14px Inter';
+
+            const wheelbase = lf + lr;
+            const scale = h * 0.6 / wheelbase;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            function drawArrow(fromX, fromY, toX, toY, color, lw) {
+                const headLength = 10;
+                const dx = toX - fromX;
+                const dy = toY - fromY;
+                const angle = Math.atan2(dy, dx);
+
+                ctx.beginPath();
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(toX, toY);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = lw;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(toX, toY);
+                ctx.lineTo(
+                    toX - headLength * Math.cos(angle - Math.PI / 6),
+                    toY - headLength * Math.sin(angle - Math.PI / 6)
+                );
+                ctx.lineTo(
+                    toX - headLength * Math.cos(angle + Math.PI / 6),
+                    toY - headLength * Math.sin(angle + Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+
+            // Center of Gravity
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+            ctx.fillStyle = colorMap.cog;
+            ctx.fill();
+            ctx.fillText('Schwerpunkt', cx + 10, cy + 5);
+
+            // Chassis
+            const frontAxleY = cy - lf * scale;
+            const rearAxleY = cy + lr * scale;
+            ctx.beginPath();
+            ctx.moveTo(cx, frontAxleY);
+            ctx.lineTo(cx, rearAxleY);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#334155';
+            ctx.stroke();
+
+            // Wheels
+            const wheelWidth = 30;
+            const wheelLength = 10;
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(cx - wheelLength / 2, rearAxleY - wheelWidth / 2, wheelLength, wheelWidth);
+            ctx.save();
+            ctx.translate(cx, frontAxleY);
+            ctx.rotate(degToRad(delta));
+            ctx.fillRect(-wheelLength / 2, -wheelWidth / 2, wheelLength, wheelWidth);
+            ctx.restore();
+
+            // Vectors and angles
+            const forceScale = 0.01;
+            const velocityScale = 4;
+            const betaForDraw = clamp(beta, -Math.PI / 3, Math.PI / 3);
+
+            const maxVelocityLength = h * 0.35;
+            const velocityLength = clamp(v * velocityScale, 0, maxVelocityLength);
+            const vEndX = cx + velocityLength * Math.sin(betaForDraw);
+            const vEndY = cy - velocityLength * Math.cos(betaForDraw);
+            drawArrow(cx, cy, vEndX, vEndY, colorMap.v, 3);
+            ctx.fillStyle = colorMap.v;
+            ctx.fillText('v', vEndX + 5, vEndY - 5);
+
+            const maxForceArrow = w * 0.35;
+            const frontForcePx = clamp(F_yf * forceScale, -maxForceArrow, maxForceArrow);
+            const rearForcePx = clamp(F_yr * forceScale, -maxForceArrow, maxForceArrow);
+
+            drawArrow(cx, frontAxleY, cx + frontForcePx, frontAxleY, colorMap.F_yf, 2);
+            ctx.fillStyle = colorMap.F_yf;
+            ctx.fillText('F_y,v', cx + frontForcePx + 5, frontAxleY);
+
+            drawArrow(cx, rearAxleY, cx + rearForcePx, rearAxleY, colorMap.F_yr, 2);
+            ctx.fillStyle = colorMap.F_yr;
+            ctx.fillText('F_y,h', cx + rearForcePx + 5, rearAxleY);
+
+            if (Math.abs(betaForDraw) > degToRad(0.1)) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(220, 38, 38, 0.7)';
+                ctx.lineWidth = 1;
+                ctx.moveTo(cx, cy - 60);
+                ctx.arc(cx, cy, 60, -Math.PI / 2, -Math.PI / 2 + betaForDraw, betaForDraw < 0);
+                ctx.stroke();
+                ctx.fillStyle = colorMap.beta;
+                ctx.fillText('β', cx + 65 * Math.sin(betaForDraw / 2), cy - 65 * Math.cos(betaForDraw / 2));
+            }
+
+            ctx.restore();
+        }
+
+        // --- UI Update Logic ---
+        function updateUI(outputs) {
+            const outputData = [
+                { key: 'beta', label: 'Schwimmwinkel (β)', value: radToDeg(outputs.beta), unit: '°', digits: 2, colorClass: 'color-beta' },
+                { key: 'psi_dot', label: 'Giergeschwindigkeit (ψ̇)', value: radToDeg(outputs.psi_dot), unit: '°/s', digits: 2 },
+                { key: 'ay', label: 'Querbeschleunigung (a_y)', value: outputs.ay, unit: 'm/s²', digits: 2 },
+                { key: 'alpha_f', label: 'Schräglaufwinkel v (α_f)', value: radToDeg(outputs.alpha_f), unit: '°', digits: 2 },
+                { key: 'alpha_r', label: 'Schräglaufwinkel h (α_r)', value: radToDeg(outputs.alpha_r), unit: '°', digits: 2 },
+                { key: 'F_yf', label: 'Seitenkraft v (F_y,v)', value: outputs.F_yf, unit: 'N', digits: 1, colorClass: 'color-Fyf' },
+                { key: 'F_yr', label: 'Seitenkraft h (F_y,h)', value: outputs.F_yr, unit: 'N', digits: 1, colorClass: 'color-Fyr' },
+                { key: 'criticalSpeed', label: 'Krit. Geschwindigkeit', value: outputs.criticalSpeed, unit: 'm/s', digits: 2 },
+            ];
+
+            outputContainer.textContent = '';
+            outputData.forEach((item) => {
+                const card = createOutputCard({
+                    label: item.label,
+                    unit: item.unit,
+                    textValue: formatValue(item.value, item.digits),
+                    colorClass: item.colorClass,
+                });
+                outputContainer.appendChild(card);
+            });
+
+            renderStatus(outputs);
+        }
+
+        // --- Main Application Logic ---
+        function main() {
+            for (const key in inputs) {
+                const normalized = sanitizeParamValue(key, inputs[key].slider.value);
+                inputs[key].slider.value = normalized;
+                inputs[key].input.value = normalized;
+                currentParams[key] = normalized;
+            }
+            currentOutputs = calculateVehicleDynamics(currentParams);
+            updateUI(currentOutputs);
+            if (ctx) {
+                try {
+                    drawVehicle(currentOutputs.params, currentOutputs);
+                } catch (error) {
+                    console.error('Visualisierung fehlgeschlagen:', error);
+                    statusContainer.className = 'mb-4 p-4 rounded-lg border text-sm bg-red-50 border-red-200 text-red-800';
+                    statusContainer.textContent = 'Visualisierung konnte nicht gezeichnet werden. Bitte Seite neu laden.';
+                }
+            }
+            renderReferenceCaseTable();
+        }
+
+        // --- Event Listeners and Input Sync ---
+        function syncInputs(source, key) {
+            const { slider, input } = inputs[key];
+            const fallback = parseFloat(slider.value);
+            const normalized = sanitizeParamValue(key, source.value, fallback);
+            slider.value = normalized;
+            input.value = normalized;
+            main();
+        }
+
+        for (const key in inputs) {
+            const { slider, input } = inputs[key];
+            slider.addEventListener('input', (e) => syncInputs(e.target, key));
+            input.addEventListener('change', (e) => syncInputs(e.target, key));
+            input.addEventListener('blur', (e) => syncInputs(e.target, key));
+        }
+
+        function setupCanvas() {
+            if (!ctx) {
+                return false;
+            }
+            const container = canvas.parentElement;
+            if (!container) {
+                return false;
+            }
+
+            const size = container.getBoundingClientRect();
+            const widthCss = Math.floor(size.width);
+            const heightCss = Math.floor(size.height);
+            if (widthCss < 2 || heightCss < 2) {
+                return false;
+            }
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.max(1, Math.floor(widthCss * dpr));
+            canvas.height = Math.max(1, Math.floor(heightCss * dpr));
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            main();
+            return true;
+        }
+
+        function requestCanvasSetupWithRetry(retries = 8) {
+            const done = setupCanvas();
+            if (done || retries <= 0) {
+                return;
+            }
+            requestAnimationFrame(() => requestCanvasSetupWithRetry(retries - 1));
+        }
+
+        let resizeFrame = null;
+        function scheduleCanvasSetup() {
+            if (resizeFrame) {
+                cancelAnimationFrame(resizeFrame);
+            }
+            resizeFrame = requestAnimationFrame(() => requestCanvasSetupWithRetry());
+        }
+
+        window.addEventListener('DOMContentLoaded', scheduleCanvasSetup);
+        window.addEventListener('load', scheduleCanvasSetup);
+        window.addEventListener('resize', scheduleCanvasSetup);
+
+        if ('ResizeObserver' in window && canvas.parentElement) {
+            const observer = new ResizeObserver(() => scheduleCanvasSetup());
+            observer.observe(canvas.parentElement);
+        }
+
+        scheduleCanvasSetup();
+    </script>
+</body>
+</html>

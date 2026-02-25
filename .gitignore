@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Tooling and local env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Local-only Codex workspace files (keep local, do not publish)
+.codex/
+docs/ai/
+docs/codex/
+.github/codex-workflows/
+AGENTS.md
+scripts/update_state.py
+scripts/init_template.py
